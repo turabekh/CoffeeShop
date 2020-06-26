@@ -5,15 +5,11 @@ from jose import jwt
 from urllib.request import urlopen
 
 
-AUTH0_DOMAIN = 'udacity-fsnd.auth0.com'
+AUTH0_DOMAIN = 'dev-qor82uv0.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'dev'
+API_AUDIENCE = 'drink'
 
 ## AuthError Exception
-'''
-AuthError Exception
-A standardized way to communicate auth failure modes
-'''
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
@@ -58,19 +54,6 @@ def check_permissions(permission, payload):
         }, 403)
     return True
 
-'''
-@TODO implement verify_decode_jwt(token) method
-    @INPUTS
-        token: a json web token (string)
-
-    it should be an Auth0 token with key id (kid)
-    it should verify the token using Auth0 /.well-known/jwks.json
-    it should decode the payload from the token
-    it should validate the claims
-    return the decoded payload
-
-    !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
-'''
 def verify_decode_jwt(token):
     # GET THE PUBLIC KEY FROM AUTH0
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
@@ -101,6 +84,7 @@ def verify_decode_jwt(token):
     if rsa_key:
         try:
             # USE THE KEY TO VALIDATE THE JWT
+
             payload = jwt.decode(
                 token,
                 rsa_key,
@@ -108,7 +92,6 @@ def verify_decode_jwt(token):
                 audience=API_AUDIENCE,
                 issuer='https://' + AUTH0_DOMAIN + '/'
             )
-
             return payload
 
         except jwt.ExpiredSignatureError:

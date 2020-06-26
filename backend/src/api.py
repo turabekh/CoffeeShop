@@ -12,7 +12,7 @@ setup_db(app)
 CORS(app)
 
 
-db_drop_and_create_all()
+# db_drop_and_create_all()
 
 ## ROUTES
 @app.route("/drinks", methods=["GET"])
@@ -27,7 +27,7 @@ def get_drinks():
 
 @app.route("/drinks-detail")
 @requires_auth(permission="get:drinks-detail")
-def get_drink_detail():
+def get_drink_detail(jwt):
     drinks = Drink.query.all() 
     drinks = [d.long() for d in drinks]
     return jsonify({
@@ -38,43 +38,43 @@ def get_drink_detail():
 
 @app.route("/drinks", methods=["POST"])
 @requires_auth(permission="post:drinks")
-def create_drink():
+def create_drink(jwt):
     body = request.get_json() 
     if "title" not in body or "recipe" not in body:
         abort(400)
     title = body.get("title", None)
     recipe = body.get("recipe", None) 
     try:
-        drink = Drink(title=title, recipe=recipe)
+        drink = Drink(title=title, recipe=json.dumps(recipe))
         drink.insert()
     except:
         abort(422) 
-    return jsonify({"success": True, "drinks": drink})
+    return jsonify({"success": True, "drinks": drink.long()})
 
 
 @app.route("/drinks/<int:id>", methods=["PATCH"])
 @requires_auth(permission="patch:drinks")
-def update_drink(id):
+def update_drink(jwt,id):
     if not id:
         abort(404) 
     body = request.get_json() 
-    if "title" not in body or "recipe" not in body:
-        abort(400)
     try:
-        title = body.get("title", None)
         recipe = body.get("recipe", None) 
+        title = body.get("title", None)
         drink = Drink.query.filter(Drink.id == id).one_or_none()
-        drink.title = title 
-        drink.recipe = recipe
+        if recipe is not None:
+            drink.recipe = json.dumps(recipe)
+        if title is not None:
+            drink.title = title
         drink.update()
     except:
         abort(422)
-    return jsonify({"success": True, "drinks": drink.long()})
+    return jsonify({"success": True,  "drinks": drink.long()})
 
 
 @app.route("/drinks/<int:id>", methods=["DELETE"])
 @requires_auth(permission="delete:drinks")
-def delete_drink(id):
+def delete_drink(jwt, id):
     if not id:
         abort(404)
     try:
